@@ -10,21 +10,6 @@ console.log('Starting Flexa Server...');
 const app = express();
 app.use(express.json());
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', service: 'Flexa Server' });
-});
-
-// Main endpoint
-app.get('/', (req, res) => {
-  res.send('Flexa Web IDE is online');
-});
-
-// API routes
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'API is working' });
-});
-
 // WebSocket Server
 try {
   const wss = new WebSocket.Server({ port: 4001, host: '0.0.0.0' }, () => {
@@ -45,7 +30,59 @@ try {
     }
 
     ws.on('message', (msg) => {
-      // ... (seu código existente)
+      try {
+        const parsed = JSON.parse(msg);
+
+        if (parsed.type === 'code') {
+          const filePath = path.join(userDir, 'main.flx');
+          fs.writeFileSync(filePath, parsed.code);
+
+          if (currentContainer) {
+            currentContainer.kill();
+            currentContainer = null;
+          }
+
+          const dockerCmd = spawn('docker', [
+            'run',
+            '--rm',
+            '-i',
+            '--memory=64m',
+            '--cpus=0.2',
+            '-v', `${userDir}:/code`,
+            '--name', `flexa_${sessionId}`,
+            'flexa-interpreter-image',
+            '/code/main.flx'
+          ]);
+
+          currentContainer = dockerCmd;
+
+          const timeout = setTimeout(() => {
+            if (currentContainer) {
+              currentContainer.kill();
+              currentContainer = null;
+            }
+          }, 1000 * 60 * 5);
+
+          dockerCmd.stdout.on('data', (data) => {
+            ws.send(JSON.stringify({ type: 'output', data: data.toString() }));
+          });
+
+          dockerCmd.stderr.on('data', (data) => {
+            ws.send(JSON.stringify({ type: 'error', data: data.toString() }));
+          });
+
+          dockerCmd.on('close', (code) => {
+            clearTimeout(timeout);
+            ws.send(JSON.stringify({ type: 'exit', code }));
+          });
+        }
+
+        if (parsed.type === 'input' && currentContainer) {
+          currentContainer.stdin.write(parsed.data + '\n');
+        }
+      } catch (err) {
+        console.error('Error processing message:', err);
+      }
     });
 
     ws.on('close', () => {
@@ -68,6 +105,21 @@ try {
 } catch (error) {
   console.error('WebSocket server error:', error);
 }
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', service: 'Flexa Server' });
+});
+
+// Main endpoint
+app.get('/', (req, res) => {
+  res.send('Flexa Web IDE is online');
+});
+
+// API routes
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API is working' });
+});
 
 // HTTP Server
 app.listen(4000, '0.0.0.0', () => {
