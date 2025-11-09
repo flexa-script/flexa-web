@@ -11,7 +11,6 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false
   },
-  // ESTA LINHA É CRUCIAL - define o base path
   base: '/flexa-ide/',
   define: {
     'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || '/flexa-server'),

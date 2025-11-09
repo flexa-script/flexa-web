@@ -80,6 +80,17 @@ try {
         if (parsed.type === 'input' && currentContainer) {
           currentContainer.stdin.write(parsed.data + '\n');
         }
+
+        if (parsed.type === 'stop' && currentContainer) {
+          // stop container explicitly by name
+          spawn('docker', ['stop', `flexa_${sessionId}`]);
+
+          // remove it just in case
+          spawn('docker', ['rm', '-f', `flexa_${sessionId}`]);
+
+          currentContainer.kill('SIGKILL');
+          currentContainer = null;
+        }
       } catch (err) {
         console.error('Error processing message:', err);
       }

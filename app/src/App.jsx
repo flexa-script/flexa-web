@@ -18,9 +18,10 @@ println("Nice to meet you, " + name + '!');
   const textareaRef = useRef(null);
   const userId = useRef(uuidv4());
   const isResizing = useRef(false);
+  const isRunning = useRef(false);
 
   useEffect(() => {
-    const wsBase = `ws://${window.location.host.split(':')[0]}:8080/flexa-server/ws`;
+    const wsBase = `ws${isHttps() ? 's' : ''}://${window.location.host.split(':')[0]}:8080/flexa-server/ws`;
     const socket = new WebSocket(wsBase);
     socketRef.current = socket;
 
@@ -31,6 +32,7 @@ println("Nice to meet you, " + name + '!');
       if (msg.type === 'output' || msg.type === 'error') {
         appendToConsole(msg.data);
       } else if (msg.type === 'exit') {
+        isRunning.current = false;
         setAllowInput(false);
         appendToConsole(`\nProcess closed with code ${msg.code}\n`);
       }
@@ -39,6 +41,10 @@ println("Nice to meet you, " + name + '!');
     socket.onclose = () => console.log('WebSocket disconnected');
     return () => socket.close();
   }, []);
+  
+  const isHttps = () => {
+    return window.location.protocol === 'https:';
+  };
 
   const appendToConsole = (text) => {
     setConsoleText(prev => {
@@ -55,6 +61,8 @@ println("Nice to meet you, " + name + '!');
   };
 
   const handleRun = () => {
+    if (isRunning.current) return;
+    isRunning.current = true;
     setAllowInput(true);
     setConsoleText('');
     setInputStart(0);
@@ -66,6 +74,7 @@ println("Nice to meet you, " + name + '!');
   };
 
   const handleStop = () => {
+    isRunning.current = false;
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify({
         type: 'stop',
