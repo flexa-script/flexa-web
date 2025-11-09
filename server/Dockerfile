@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copia o binário flexa para o estágio do interpretador
-COPY interpreter/flexa /app/interpreter/flexa
+COPY interpreter/ /app/interpreter/
 RUN chmod +x /app/interpreter/flexa
 
 # Estágio 2: Backend Node.js
