@@ -4,22 +4,27 @@ services:
       context: ./app
       dockerfile: Dockerfile
     ports:
-      - "127.0.0.1:3000:3000"  # Restringe para localhost
+      - "127.0.0.1:3000:3000"
     networks:
       - flexa-network
+    depends_on:
+      - backend
 
   backend:
     build:
       context: ./server
       dockerfile: Dockerfile
     ports:
-      - "127.0.0.1:4000:4000"  # Restringe para localhost
-      - "127.0.0.1:4001:4001"  # Restringe para localhost
+      - "127.0.0.1:4000:4000"
+      - "127.0.0.1:4001:4001"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./server/temp:/app/temp
     networks:
       - flexa-network
+    environment:
+      - NODE_ENV=production
+      - HOST_TEMP_PATH=${PWD}/server/temp
 
 networks:
   flexa-network:

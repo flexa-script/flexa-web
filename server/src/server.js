@@ -10,6 +10,16 @@ console.log('Starting Flexa Server...');
 const app = express();
 app.use(express.json());
 
+const HOST_TEMP_PATH = process.env.HOST_TEMP_PATH || '/app/temp';
+
+function resolveHostPath(userDir) {
+  if (fs.existsSync('/.dockerenv')) {
+    const relativePath = path.relative('/app/temp', userDir);
+    return path.resolve(HOST_TEMP_PATH, relativePath);
+  }
+  return userDir;
+}
+
 // WebSocket Server
 try {
   const wss = new WebSocket.Server({ port: 4001, host: '0.0.0.0' }, () => {
@@ -42,13 +52,11 @@ try {
             currentContainer = null;
           }
 
+          const hostPath = resolveHostPath(userDir);
           const dockerCmd = spawn('docker', [
-            'run',
-            '--rm',
-            '-i',
-            '--memory=64m',
-            '--cpus=0.2',
-            '-v', `${userDir}:/code`,
+            'run', '--rm', '-i',
+            '--memory=64m', '--cpus=0.2',
+            '-v', `${hostPath}:/code`,
             '--name', `flexa_${sessionId}`,
             'flexa-interpreter-image',
             '/code/main.flx'

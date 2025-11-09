@@ -1,36 +1,36 @@
-# Estágio 1: Construir o interpretador
-FROM ubuntu:22.04 as interpreter
+# Stage 1: build the interpretador
+FROM ubuntu:22.04 AS interpreter
 
-# Instala dependências do interpretador
+# Install interpreter dependencies
 RUN apt-get update && apt-get install -y \
     libstdc++6 \
     && apt-get clean
 
 WORKDIR /app
 
-# Copia o binário flexa para o estágio do interpretador
+# Copy the flex binary to the interpreter stage
 COPY interpreter/ /app/interpreter/
 RUN chmod +x /app/interpreter/flexa
 
-# Estágio 2: Backend Node.js
+# Stage 2: Node.js Backend
 FROM node:18-alpine
 
-# Instala Docker CLI
+# Install Docker CLI
 RUN apk add --no-cache docker
 
 WORKDIR /app
 
-# Copia package.json e instala dependências
+# Copy package.json e install dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copia o código do backend
+# Copy backend source code
 COPY . .
 
-# Copia o interpretador do estágio anterior (AGORA FUNCIONA!)
-COPY --from=interpreter /app/interpreter/flexa /app/interpreter/flexa
+# Copy the interpreter from the first stage
+COPY --from=interpreter /app/interpreter /app/interpreter
 
-# Cria diretório para arquivos temporários
+# Create temp directory
 RUN mkdir -p temp
 
 EXPOSE 4000 4001
