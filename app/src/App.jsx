@@ -4,7 +4,7 @@ import Editor from '@monaco-editor/react';
 import './App.css';
 
 function App() {
-  const [code, setCode] = useState(`// Visit https://flexa-script.github.io/ for docs
+  const [code, setCode] = useState(`// Visit https://flexascript.github.io/ for docs
 
 println("Hello there!");
 var name = read("What's your name? ");
@@ -141,9 +141,9 @@ println("Nice to meet you, " + name + '!');
         <button className="topbar-btn run" onClick={handleRun}>▶ Run</button>
         <button className="topbar-btn stop" onClick={handleStop}>⏹ Stop</button>
         <div className="vertical-div"></div>
-        <a className="topbar-btn" target="_blank" href="https://flexa-script.github.io/">🗎 Docs</a>
-        <a className="topbar-btn" target="_blank" href="https://github.com/flexa-script">🌐 GitHub</a>
-        <a className="topbar-btn" target="_blank" href="https://github.com/flexa-script/interpreter">🌐 Interpreter</a>
+        <a className="topbar-btn" target="_blank" href="https://flexascript.github.io/">🗎 Docs</a>
+        <a className="topbar-btn" target="_blank" href="https://github.com/flexascript">🌐 GitHub</a>
+        <a className="topbar-btn" target="_blank" href="https://github.com/flexascript/interpreter">🌐 Interpreter</a>
       </div>
 
       <div className="editor-container" style={{ height: `${editorHeight}%` }}>
