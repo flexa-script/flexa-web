@@ -55,10 +55,26 @@ try {
           const hostPath = resolveHostPath(userDir);
           const dockerCmd = spawn('docker', [
             'run', '--rm', '-i',
-            '--memory=64m', '--cpus=0.2',
-            '-v', `${hostPath}:/code`,
             '--name', `flexa_${sessionId}`,
+
+            // resource limits
+            '--memory=64m', '--cpus=0.2', '--pids-limit=64',
+
+            // security options
+            '--read-only',
+            '--tmpfs', '/tmp:rw,size=64m',
+            '--network=none',
+            '--cap-drop', 'ALL',
+            '--security-opt', 'no-new-privileges',
+            '--user', '1000:1000',
+
+            // mount user code
+            '-v', `${hostPath}:/code:ro`,
+
+            // image and runtime command
             'flexa-interpreter-image',
+            
+            // write code to temp file and run
             '/code/main.flx'
           ]);
 

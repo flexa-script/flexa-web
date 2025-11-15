@@ -4,13 +4,21 @@ FROM ubuntu:22.04 AS interpreter
 # Install interpreter dependencies
 RUN apt-get update && apt-get install -y \
     libstdc++6 \
-    && apt-get clean
+    ca-certificates \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Copy the flex binary to the interpreter stage
 COPY interpreter/ /app/interpreter/
 RUN chmod +x /app/interpreter/flexa
+
+# create non-root user
+RUN useradd -m -u 1000 runner \
+ && chown -R runner:runner /app
+
+# drop to non-root user (container will run as runner)
+USER runner
 
 # Stage 2: Node.js Backend
 FROM node:25-alpine
